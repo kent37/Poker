@@ -3,7 +3,7 @@ library(magrittr)
 
 # Forward and reverse lookup for card rank
 card_names = c(as.character(2:10), 'J', 'Q', 'K', 'A')
-card_ranks = 2:14 %>% set_names(card_names)
+card_ranks = 2:14 %>% magrittr::set_names(card_names)
 
 full_deck = paste0(rep(card_names, 4), rep(c('S', 'H', 'D', 'C'), each=13))
 
@@ -11,13 +11,14 @@ full_deck = paste0(rep(card_names, 4), rep(c('S', 'H', 'D', 'C'), each=13))
 #' @param card The text name of a card, e.g. 'JH'
 #' @return A two element list containing the numeric card rank
 #' and suit
+#' @importFrom magrittr "%>%"
 parse_card = function(card) {
   stopifnot(is.character(card), length(card)==1,
             stringr::str_length(card) %in% 2:3)
 
   # Split to list
   parsed = stringr::str_match(card, '(..?)(.)')[1, 2:3] %>%
-    set_names(c('rank', 'suit')) %>% as.list()
+    magrittr::set_names(c('rank', 'suit')) %>% as.list()
 
   # Look up the alpha rank. This makes a named vector so it preserves the
   # alpha value.
@@ -29,6 +30,7 @@ parse_card = function(card) {
 #' Parse a hand provided as a JSON list of cards
 #' @param cards The JSON input
 #' @return A list of cards in decreasing order of rank
+#' @export
 parse_cards = function(cards) {
   # Parse to cards
   raw_list = jsonlite::fromJSON(cards)
@@ -38,26 +40,39 @@ parse_cards = function(cards) {
   ranks = purrr::map_int(hand, 'rank')
   hand = hand[order(ranks, decreasing=TRUE)]
 
-  structure(hand, class=c('hand', class(parsed)))
+  structure(hand, class=c('hand', class(hand)))
 }
 
 #' Construct the string representation of a card
-#' @param card A card object
+#' @param x A card object
+#' @param ... Ignored
 #' @return The string representation of the card
-format.card = function(card) {
-  stopifnot(inherits(card, 'card'))
+#' @export
+format.card = function(x, ...) {
+  stopifnot(inherits(x, 'card'))
 
-  paste0(names(card$rank), card$suit)
+  paste0(names(x$rank), x$suit)
 }
 
-print.card = function(card) print(format(card))
+#' Print a card
+#' @param x A card object
+#' @param ... Passed to `print.default`
+#' @export
+print.card = function(x, ...) print(format(x), ...)
 
 #' Re-construct the JSON representation of a hand
-#' @param hand A hand object
+#' @param x A hand object
+#' @param ... Ignored
 #' @return A JSON representation of the hand
-format.hand = function(hand) {
-  stopifnot(inherits(hand, 'hand'))
-  purrr::map_chr(hand, format.card) %>% paste(collapse=', ')
+#' @export
+#' @importFrom magrittr "%>%"
+format.hand = function(x, ...) {
+  stopifnot(inherits(x, 'hand'))
+  purrr::map_chr(x, format.card) %>% paste(collapse=', ')
 }
 
-print.hand = function(hand) print(format(hand))
+#' Print a hand
+#' @param x A hand object
+#' @param ... Passed to `print.default`
+#' @export
+print.hand = function(x, ...) print(format(x), ...)

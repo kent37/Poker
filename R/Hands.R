@@ -5,12 +5,13 @@ category_names = c('Royal Flush', 'Straight Flush', 'Four of a Kind',
                'Full House', 'Flush', 'Straight', 'Three of a Kind',
                'Two Pair', 'One Pair', 'High Card')
 
-category_ranks = seq_along(hand_names) %>% set_names(hand_names)
+category_ranks = seq_along(category_names) %>% magrittr::set_names(category_names)
 
 #' Find the category of a hand.
 #' Will work with hands of any size up to 5
 #' @param hand A hand
 #' @return A category object
+#' @export
 rank_hand = function(hand) {
   stopifnot(inherits(hand, 'hand'), length(hand) <= 5)
 

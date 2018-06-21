@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: person("Kent", "Johnson", email = "kent3737@gmail.com", role = c("aut", "cre"))
 Description: Parse and rank poker hands.
 Depends: R (>= 3.5.0)
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
