@@ -22,8 +22,3 @@ test_that("rank_hand works", {
     expect_equal(format(rank_hand(hand)), expected_rank, info=expected_rank)
   }
 })
-
-# Make every possible hand and see if it can be ranked
-# test_that('All hands can be ranked', {
-#
-# })

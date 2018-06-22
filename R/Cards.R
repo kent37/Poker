@@ -5,6 +5,11 @@ library(magrittr)
 card_names = c(as.character(2:10), 'J', 'Q', 'K', 'A')
 card_ranks = 2:14 %>% magrittr::set_names(card_names)
 
+ranks_to_name = function(ranks) {
+  # Card ranks start at 2, hence the offset
+  card_names[ranks-1]
+}
+
 full_deck = paste0(rep(card_names, 4), rep(c('S', 'H', 'D', 'C'), each=13))
 
 #' Parse a single card

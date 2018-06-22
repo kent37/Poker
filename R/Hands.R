@@ -12,6 +12,7 @@ category_ranks = seq_along(category_names) %>% magrittr::set_names(category_name
 #' @param hand A hand
 #' @return A category object
 #' @export
+#' @importFrom stats "na.omit"
 rank_hand = function(hand) {
   stopifnot(inherits(hand, 'hand'), length(hand) <= 5)
 
@@ -133,16 +134,16 @@ as.category = function(name, high, kickers) {
 format.category = function(x, ...) {
   name = x$name
   high = purrr::map_int(x$high, 'rank')
-  high = card_names[high-1]
+  high = ranks_to_name(high)
   kickers = purrr::map_int(x$kickers, 'rank')
-  kickers = card_names[kickers-1]
+  kickers = ranks_to_name(kickers)
 
-  high_str = dplyr::case_when(
-    length(high)==0 ~ NA_character_,
-    length(high)==1 ~ paste(high, 'High'),
-    (length(high)==2 && name=='Full House') ~ paste(high[1], 'over', high[2]),
-    (length(high)==2 && name=='Two Pair') ~ paste(high[1], 'and', high[2])
-  )[1]
+  high_str = switch(length(high) + 1,
+    NA_character_, # length == 0
+    paste(high, 'High'),
+    ifelse(name=='Full House', paste(high[1], 'over', high[2]),
+      paste(high[1], 'and', high[2]))
+  )
 
   kicker_str = ifelse(length(kickers)==0, NA_character_,
                       paste('Kickers:', paste(kickers, collapse=', ')))
