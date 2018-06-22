@@ -31,10 +31,10 @@ test_hands = list(
   c('["7H", "2H", "3C", "4H", "6H"]', 'High Card, 7 High, Kickers: 6, 4, 3, 2')
   )
 
-test_that("rank_hand works", {
+test_that("categorize_hand works", {
   for (case in test_hands) {
     hand = parse_cards(case[1])
     expected_rank = case[2]
-    expect_equal(format(rank_hand(hand)), expected_rank, info=expected_rank)
+    expect_equal(format(categorize_hand(hand)), expected_rank, info=expected_rank)
   }
 })

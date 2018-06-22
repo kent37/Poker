@@ -1,4 +1,4 @@
-# Find the rank of a hand
+# Find the category of a hand
 library(magrittr)
 
 category_names = c('Royal Flush', 'Straight Flush', 'Four of a Kind',
@@ -13,7 +13,7 @@ category_ranks = seq_along(category_names) %>% magrittr::set_names(category_name
 #' @return A category object
 #' @export
 #' @importFrom stats "na.omit"
-rank_hand = function(hand) {
+categorize_hand = function(hand) {
   stopifnot(inherits(hand, 'hand'), length(hand) <= 5)
 
   # We can learn a lot from the differences between ranks. This
