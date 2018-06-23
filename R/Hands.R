@@ -10,13 +10,13 @@ category_ranks = (length(category_names) - seq_along(category_names)) %>%
   magrittr::set_names(category_names)
 
 #' Find the category of a hand.
-#' Will work with hands of any size up to 5
+#' Will work with hands of any size
 #' @param hand A hand
 #' @return The hand with added category and rank_vector fields
 #' @export
 #' @importFrom stats "na.omit"
 categorize_hand = function(hand) {
-  stopifnot(inherits(hand, 'hand'), length(hand) <= 5)
+  stopifnot(inherits(hand, 'hand'))
 
   # Category is cached in the hand, if it is there just return it
   if (!is.null(hand$category))
@@ -52,48 +52,73 @@ categorize_hand = function(hand) {
 }
 
 # These functions all take a hand, diffs and max_flush as input and return either a
-# category object (a list with a name, high card(s) and kickers)
+# category object (a list with a name, used cards, high card(s) and kickers)
 # or NULL
 is_straight_flush = function(hand, diffs, max_flush) {
-  if (max_flush!=5 || !stringr::str_detect(diffs, '1111'))
+  if (max_flush!=5)
     return (NULL)
 
-  # It's some kind of straight flush
-  if (hand[[1]]$rank == 14)
-    return (as.category('Royal Straight Flush', NULL, NULL))
+  # This is broken for hands > 5 cards, needs to detect straight and flush
+  # on the same 5 cards.
+  stopifnot(length(hand) <= 5)
 
-  return (as.category('Straight Flush', hand[1], NULL))
+  m = stringr::str_locate(diffs, '1111')
+  loc = unname(m[1, 1])
+  if (is.na(loc)) return (NULL)
+
+  # It's some kind of straight flush
+  cards = hand[loc:(loc+4)]
+  if (cards[[1]]$rank == 14)
+    return (as.category('Royal Straight Flush', cards, NULL, NULL))
+
+  return (as.category('Straight Flush', cards, cards[1], NULL))
 }
 
 is_four_of_a_kind = function(hand, diffs, max_flush) {
   m = stringr::str_locate(diffs, '000')
   loc = unname(m[1, 1])
   if (is.na(loc)) return (NULL)
+
   high = hand[loc]
-  kicker = ifelse(loc==1, hand[5], hand[1])
-  return (as.category('Four of a Kind', high, kicker))
+  cards = hand[loc:(loc+3)]
+  kicker = hand[setdiff(seq_along(hand),loc:(loc+3))[1]]
+  return (as.category('Four of a Kind', cards, high, kicker))
 }
 
 is_full_house = function(hand, diffs, max_flush) {
-  if (stringr::str_detect(diffs, '00.0')) # Three then two
-    return (as.category('Full House', hand[c(1, 4)], NULL))
+  m = stringr::str_locate(diffs, '00.0') # Three then two
+  start = unname(m[1, 1])
+  if (!is.na(start)) {
+    end = unname(m[1, 2])
+    cards = hand[c(start:(start+2), end, end+1)]
+    return (as.category('Full House', cards, cards[c(1, 4)], NULL))
+  }
 
-  if (stringr::str_detect(diffs, '0.00')) # Two then three
-    return (as.category('Full House', hand[c(3, 1)], NULL))
+  m = stringr::str_locate(diffs, '0.00') # Two then three
+  start = unname(m[1, 1])
+  if (is.na(start))
+    return (NULL)
 
-  return (NULL)
+  end = unname(m[1, 2])
+  cards = hand[c(start, start+1, end:(end+2))]
+  return (as.category('Full House', cards, cards[c(4, 1)], NULL))
 }
 
 is_straight = function(hand, diffs, max_flush) {
-  if (stringr::str_detect(diffs, '1111'))
-    return (as.category('Straight', hand[1], NULL))
+  m = stringr::str_locate(diffs, '1111')
+  loc = unname(m[1, 1])
+  if (is.na(loc)) return (NULL)
+
+  cards = hand[loc:(loc+4)]
+  return (as.category('Straight', cards, cards[1], NULL))
 
   return (NULL)
 }
 
 is_flush = function(hand, diffs, max_flush) {
+  # This is broken for hands > 5 cards, does not return the correct cards
   if (max_flush == 5)
-    return (as.category('Flush', hand[1], NULL))
+    return (as.category('Flush', hand[1:5], hand[1], NULL))
 
   return (NULL)
 }
@@ -104,8 +129,11 @@ is_three_of_a_kind = function(hand, diffs, max_flush) {
   loc = m[1, 1]
   if (is.na(loc)) return (NULL)
 
-  kickers = setdiff(1:5, loc:(loc+2))
-  return (as.category('Three of a Kind', hand[loc], hand[kickers]))
+  cards = hand[loc:(loc+2)]
+
+  # The two best cards not included in the three
+  kickers = hand[setdiff(seq_along(hand), loc:(loc+2))[1:2]]
+  return (as.category('Three of a Kind', cards, cards[1], kickers))
 }
 
 is_two_pair = function(hand, diffs, max_flush) {
@@ -113,8 +141,9 @@ is_two_pair = function(hand, diffs, max_flush) {
   p1 = m[1, 1]
   if (is.na(p1)) return (NULL)
   p2 = m[1, 2]
-  kicker = setdiff(1:5, c(p1, p1+1, p2, p2+1))
-  return (as.category('Two Pair', hand[c(p1, p2)], hand[kicker]))
+  cards = c(hand[c(p1, p1+1, p2, p2+1)])
+  kicker = hand[setdiff(seq_along(hand), c(p1, p1+1, p2, p2+1))[1]]
+  return (as.category('Two Pair', cards, cards[c(1, 3)], kicker))
 }
 
 is_pair = function(hand, diffs, max_flush) {
@@ -122,16 +151,22 @@ is_pair = function(hand, diffs, max_flush) {
   loc = m[1, 1]
   if (is.na(loc)) return (NULL)
 
-  kickers = setdiff(1:5, c(loc, loc+1))
-  return (as.category('One Pair', hand[loc], hand[kickers]))
+  cards = hand[c(loc, loc+1)]
+  kickers = hand[setdiff(seq_along(hand), c(loc, loc+1))[1:3]]
+  return (as.category('One Pair', cards, cards[1], kickers))
 }
 
 is_high_card = function(hand, diffs, max_flush) {
-  return (as.category('High Card', hand[1], hand[2:5]))
+  return (as.category('High Card', hand[1], hand[1], hand[2:5]))
 }
 
-as.category = function(name, high, kickers) {
-  structure(list(name=name, high=high, kickers=kickers),
+# A category is a list with
+# name - the category name, e.g. "One Pair"
+# cards - the cards constituting the actual combination, e.g. the pair
+# high - the high card(s) in the hand
+# kickers - any cards in the hand not used to make `cards`
+as.category = function(name, cards, high, kickers) {
+  structure(list(name=name, cards=cards, high=high, kickers=kickers),
             class=c('category', 'list'))
 }
 
