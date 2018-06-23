@@ -2,7 +2,7 @@
 % Please edit documentation in R/Cards.R
 \name{format.hand}
 \alias{format.hand}
-\title{Re-construct the JSON representation of a hand}
+\title{Construct a string representation of a hand}
 \usage{
 \method{format}{hand}(x, ...)
 }
@@ -15,5 +15,5 @@
 A JSON representation of the hand
 }
 \description{
-Re-construct the JSON representation of a hand
+Construct a string representation of a hand
 }

@@ -1,7 +1,7 @@
 # Find the category of a hand
 library(magrittr)
 
-category_names = c('Royal Flush', 'Straight Flush', 'Four of a Kind',
+category_names = c('Royal Straight Flush', 'Straight Flush', 'Four of a Kind',
                'Full House', 'Flush', 'Straight', 'Three of a Kind',
                'Two Pair', 'One Pair', 'High Card')
 
@@ -168,11 +168,11 @@ print.category = function(x, ...) print(format(x), ...)
 
 #' Make a vector of (integer) category, high card ranks, kicker ranks
 #' that can be used to order hands
-#' @param hand A category object
+#' @param category A category object
 #' @return An integer vector
 #' @export
-make_rank_vector = function(cat) {
-  cat_rank = category_ranks[cat$name]
-  cards = purrr::map_int(c(cat$high, cat$kickers), 'rank')
+make_rank_vector = function(category) {
+  cat_rank = category_ranks[category$name]
+  cards = purrr::map_int(c(category$high, category$kickers), 'rank')
   structure(c(cat_rank, cards), class=c('rank_vector', 'numeric'))
 }

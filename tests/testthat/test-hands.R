@@ -39,3 +39,25 @@ test_that("categorize_hand works", {
     expect_equal(format(hand$category), expected_rank, info=expected_rank)
   }
 })
+
+test_that('Ordering hands works', {
+  hands = purrr::map(test_hands, 1) %>% purrr::map(parse_cards)
+
+  # Random permutation of hands
+  permuted = hands[sample(seq_along(hands))]
+  sorted = permuted[order_hands(permuted)]
+  sorted_categories = purrr::map(sorted, categorize_hand) %>%
+    purrr::map('category') %>%
+    purrr::map_chr(format)
+  expected_categories = purrr::map_chr(test_hands, 2)
+  expect_equal(sorted_categories, expected_categories)
+
+  # Check that equal hands sort together
+  doubled = rep(hands, each=2)
+  double_order = order_hands(doubled)
+  expect_equal(double_order, seq_along(double_order))
+
+  # Check reverse sort
+  reverse_order = order_hands(hands, decreasing=FALSE)
+  expect_equal(reverse_order, length(hands):1)
+})

@@ -11,7 +11,7 @@ categorize_hand(hand)
 \item{hand}{A hand}
 }
 \value{
-A category object
+The hand with added category and rank_vector fields
 }
 \description{
 Find the category of a hand.
