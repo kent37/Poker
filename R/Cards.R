@@ -25,8 +25,7 @@ parse_card = function(card) {
   parsed = stringr::str_match(card, '(..?)(.)')[1, 2:3] %>%
     magrittr::set_names(c('rank', 'suit')) %>% as.list()
 
-  # Look up the alpha rank. This makes a named vector so it preserves the
-  # alpha value.
+  # Look up the integer rank.
   parsed$rank = card_ranks[parsed$rank]
 
   structure(parsed, class=c('card', class(parsed)))
@@ -45,7 +44,7 @@ parse_cards = function(cards) {
   ranks = purrr::map_int(hand, 'rank')
   hand = hand[order(ranks, decreasing=TRUE)]
 
-  structure(hand, class=c('hand', class(hand)))
+  structure(list(cards=hand), class=c('hand', class(list)))
 }
 
 #' Construct the string representation of a card
@@ -65,7 +64,7 @@ format.card = function(x, ...) {
 #' @export
 print.card = function(x, ...) print(format(x), ...)
 
-#' Re-construct the JSON representation of a hand
+#' Construct a string representation of a hand
 #' @param x A hand object
 #' @param ... Ignored
 #' @return A JSON representation of the hand
@@ -73,7 +72,7 @@ print.card = function(x, ...) print(format(x), ...)
 #' @importFrom magrittr "%>%"
 format.hand = function(x, ...) {
   stopifnot(inherits(x, 'hand'))
-  purrr::map_chr(x, format.card) %>% paste(collapse=', ')
+  purrr::map_chr(x$cards, format.card) %>% paste(collapse=', ')
 }
 
 #' Print a hand

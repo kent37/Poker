@@ -1,4 +1,5 @@
 library(testthat)
+library(magrittr)
 context("test-hands.R")
 
 # One hand of each type, and its type
@@ -33,8 +34,8 @@ test_hands = list(
 
 test_that("categorize_hand works", {
   for (case in test_hands) {
-    hand = parse_cards(case[1])
+    hand = parse_cards(case[1]) %>% categorize_hand
     expected_rank = case[2]
-    expect_equal(format(categorize_hand(hand)), expected_rank, info=expected_rank)
+    expect_equal(format(hand$category), expected_rank, info=expected_rank)
   }
 })

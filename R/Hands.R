@@ -5,21 +5,27 @@ category_names = c('Royal Flush', 'Straight Flush', 'Four of a Kind',
                'Full House', 'Flush', 'Straight', 'Three of a Kind',
                'Two Pair', 'One Pair', 'High Card')
 
-category_ranks = seq_along(category_names) %>% magrittr::set_names(category_names)
+# Numeric ranks, decreasing with the value of the hand
+category_ranks = (length(category_names) - seq_along(category_names)) %>%
+  magrittr::set_names(category_names)
 
 #' Find the category of a hand.
 #' Will work with hands of any size up to 5
 #' @param hand A hand
-#' @return A category object
+#' @return The hand with added category and rank_vector fields
 #' @export
 #' @importFrom stats "na.omit"
 categorize_hand = function(hand) {
   stopifnot(inherits(hand, 'hand'), length(hand) <= 5)
 
+  # Category is cached in the hand, if it is there just return it
+  if (!is.null(hand$category))
+    return (hand)
+
   # We can learn a lot from the differences between ranks. This
   # can identify like cards and runs.
   # Putting the diffs into strings allows regex matching
-  ranks = purrr::map_int(hand, 'rank')
+  ranks = purrr::map_int(hand$cards, 'rank')
   diffs = diff(ranks)
 
   # Make a useful string containing only 0, 1 and 2
@@ -28,7 +34,7 @@ categorize_hand = function(hand) {
   diffs = paste0(diffs, collapse='')
 
   # Find the largest number of cards in any suit
-  suits = purrr::map_chr(hand, 'suit')
+  suits = purrr::map_chr(hand$cards, 'suit')
   max_flush = max(table(suits))
 
   # Now try all the testers and find the one that sticks
@@ -36,9 +42,12 @@ categorize_hand = function(hand) {
               is_flush, is_straight, is_three_of_a_kind, is_two_pair,
               is_pair, is_high_card)
   for (tester in testers) {
-    category = tester(hand, diffs, max_flush)
-    if (!is.null(category))
-      return (category)
+    category = tester(hand$cards, diffs, max_flush)
+    if (!is.null(category)) {
+      hand$category = category
+      hand$rank_vector = make_rank_vector(category)
+      return (hand)
+    }
   }
 }
 
@@ -156,3 +165,14 @@ format.category = function(x, ...) {
 #' @param ... Passed to `print.default`
 #' @export
 print.category = function(x, ...) print(format(x), ...)
+
+#' Make a vector of (integer) category, high card ranks, kicker ranks
+#' that can be used to order hands
+#' @param hand A category object
+#' @return An integer vector
+#' @export
+make_rank_vector = function(cat) {
+  cat_rank = category_ranks[cat$name]
+  cards = purrr::map_int(c(cat$high, cat$kickers), 'rank')
+  structure(c(cat_rank, cards), class=c('rank_vector', 'numeric'))
+}
