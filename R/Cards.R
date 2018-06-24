@@ -10,7 +10,8 @@ ranks_to_name = function(ranks) {
   card_names[ranks-1]
 }
 
-full_deck = paste0(rep(card_names, 4), rep(c('S', 'H', 'D', 'C'), each=13))
+suits = c('S', 'H', 'D', 'C')
+full_deck = paste0(rep(card_names, 4), rep(suits, each=13))
 
 #' Parse a single card
 #' @param card The text name of a card, e.g. 'JH'
@@ -26,6 +27,7 @@ parse_card = function(card) {
     magrittr::set_names(c('rank', 'suit')) %>% as.list()
 
   # Look up the integer rank.
+  stopifnot(parsed$rank %in% card_names, parsed$suit %in% suits)
   parsed$rank = card_ranks[parsed$rank]
 
   structure(parsed, class=c('card', class(parsed)))
