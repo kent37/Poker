@@ -3,7 +3,7 @@
 \name{categorize_hand}
 \alias{categorize_hand}
 \title{Find the category of a hand.
-Will work with hands of any size}
+Will work with hands up to 9 cards.}
 \usage{
 categorize_hand(hand)
 }
@@ -15,5 +15,5 @@ The hand with added category and rank_vector fields
 }
 \description{
 Find the category of a hand.
-Will work with hands of any size
+Will work with hands up to 9 cards.
 }
