@@ -26,3 +26,28 @@ order_hands = function(hands, decreasing=TRUE) {
   # Now ordering `mat` gives us what we want
   do.call(order, c(mat, list(decreasing=decreasing)))
 }
+
+#' Compute ranks (ordinal order) for a sorted list of hands.
+#' This is `rank(ties.method='min', ...)` for an already sorted list
+#' @param hands A list of hand objects
+#' @return An integer vector of ranks
+#' @export
+rank_hands = function(hands) {
+  ranks = integer(length(hands))
+  rank_vectors = purrr::map(hands, 'rank_vector')
+  last_vector = NULL
+  last_rank = 1
+
+  for (i in seq_along(ranks)) {
+    this_vector = rank_vectors[[i]]
+    if (length(this_vector) == length(last_vector) && all(this_vector==last_vector))
+      ranks[i] = last_rank
+    else
+      ranks[i] = i
+
+    last_vector = this_vector
+    last_rank = ranks[i]
+  }
+
+  ranks
+}

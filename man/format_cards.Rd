@@ -2,7 +2,7 @@
 % Please edit documentation in R/Hands.R
 \name{format_cards}
 \alias{format_cards}
-\title{Format the cards used to show the hand.}
+\title{Format the (subset of) cards used to make the best hand.}
 \usage{
 format_cards(category)
 }
@@ -13,5 +13,5 @@ format_cards(category)
 A string showing the cards used in the hand
 }
 \description{
-Format the cards used to show the hand.
+Format the (subset of) cards used to make the best hand.
 }

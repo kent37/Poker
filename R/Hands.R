@@ -18,7 +18,9 @@ category_ranks = (length(category_names) - seq_along(category_names)) %>%
 categorize_hand = function(hand) {
   # Limiting the hand to <= 9 cards means there can be only one
   # possible straight or flush. We depend on that.
-  stopifnot(inherits(hand, 'hand'), length(hand) <= 9)
+  stopifnot(inherits(hand, 'hand'),
+            length(hand$cards) <= 9,
+            length(hand$cards) >= 5)
 
   # Category is cached in the hand, if it is there just return it
   if (!is.null(hand$category))
@@ -198,7 +200,7 @@ as.category = function(name, cards, high, kickers) {
 format.category = function(x, ...) {
   name = x$name
   high = purrr::map_int(x$high, 'rank')
-  high = ranks_to_name(high)
+  high = Poker:::ranks_to_name(high)
   kickers = purrr::map_int(x$kickers, 'rank')
   kickers = ranks_to_name(kickers)
 

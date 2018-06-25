@@ -39,10 +39,13 @@ server <- function(input, output) {
         desc = format(hand$category)
         cards = format_cards(hand$category)
         results = rbind(values$results,
-                        data.frame(Hand=hand_text, Value=desc, Cards=cards))
+                        data.frame(Hand=hand_text, Value=desc, Cards=cards, Rank=0))
         order = order_hands(hands)
         values$hands = hands[order]
-        values$results = results[order,]
+        ranks = rank_hands(values$hands)
+        results = results[order,]
+        results$Rank = ranks
+        values$results = results
       }
     }
   })
