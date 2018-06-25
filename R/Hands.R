@@ -200,7 +200,7 @@ as.category = function(name, cards, high, kickers) {
 format.category = function(x, ...) {
   name = x$name
   high = purrr::map_int(x$high, 'rank')
-  high = Poker:::ranks_to_name(high)
+  high = ranks_to_name(high)
   kickers = purrr::map_int(x$kickers, 'rank')
   kickers = ranks_to_name(kickers)
 
