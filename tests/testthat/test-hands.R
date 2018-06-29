@@ -66,7 +66,7 @@ test_that("categorize_hand works", {
   for (case in test_hands) {
     expected_rank = case[2]
     #cat('** ', expected_rank, '\n')
-    hand = parse_cards(case[1]) %>% categorize_hand
+    hand = parse_cards(case[1]) %>% categorize_hand_with_jokers
     expect_equal(format(hand$category), expected_rank, info=expected_rank)
     expect_equal(length(hand$category$cards), as.integer(case[3]),
                  info=expected_rank)
@@ -77,17 +77,27 @@ test_that("categorize_hand works with big hands", {
   for (case in test_big_hands) {
     expected_rank = case[2]
     #cat('** ', expected_rank, '\n')
-    hand = parse_cards(case[1]) %>% categorize_hand
+    hand = parse_cards(case[1]) %>% categorize_hand_with_jokers
     expect_equal(format(hand$category), expected_rank, info=expected_rank)
     expect_equal(format_cards(hand$category), case[3],
                  info=expected_rank)
   }
 })
 
-for (case in test_big_hands) {
-  hand = parse_cards(case[1]) %>% categorize_hand
-  cat('"', format_cards(hand$category), '"\n', sep='')
-}
+
+with_jokers = list(
+  c('["3H", "3S", "3D", "Jo", "3C"]', 'Five of a Kind, 3 High', 1),
+  c('["JS", "9D", "Jo", "9C", "JC"]', 'Full House, J over 9', 1),
+  c('["8S", "QH", "Jo", "Jo", "10C"]', 'Straight, Q High', 2)
+)
+
+test_that('Jokers work', {
+  for (case in with_jokers) {
+    hand = parse_cards(case[1]) %>% categorize_hand_with_jokers
+    expect_equal(format(hand$category), case[2])
+    expect_equal(hand$joker_count, as.integer(case[3]))
+  }
+})
 
 test_that('Ordering hands works', {
   hands = purrr::map(test_hands, 1) %>%

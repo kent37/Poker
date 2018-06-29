@@ -1,13 +1,40 @@
 # Find the category of a hand
 library(magrittr)
 
-category_names = c('Royal Straight Flush', 'Straight Flush', 'Four of a Kind',
+category_names = c('Five of a Kind', 'Royal Straight Flush', 'Straight Flush',
+                   'Four of a Kind',
                'Full House', 'Flush', 'Straight', 'Three of a Kind',
                'Two Pair', 'One Pair', 'High Card')
 
 # Numeric ranks, decreasing with the value of the hand
 category_ranks = (length(category_names) - seq_along(category_names)) %>%
   magrittr::set_names(category_names)
+
+#' Find the category of a hand which may contain jokers.
+#' Will work with hands up to 9 cards.
+#' @param hand A hand
+#' @return The hand with added category and rank_vector fields
+#' @export
+categorize_hand_with_jokers = function(hand) {
+  if (hand$joker_count == 0)
+    return (categorize_hand(hand))
+
+  parsed_deck = purrr::map(full_deck, parse_card)
+  joker_replacements = if(hand$joker_count == 1) {
+    purrr::map(parsed_deck, ~list(.x))
+  } else purrr::cross2(parsed_deck, parsed_deck)
+
+  possible_hands = purrr::map(joker_replacements, ~add_wild_cards(hand, .x)) %>%
+    purrr::map(categorize_hand)
+
+  possible_hands = possible_hands[order_hands(possible_hands, decreasing=TRUE)]
+  best = possible_hands[[1]]
+
+  # Keep the original cards with the new category and rank_vector
+  best$cards = hand$cards
+  best$joker_count = hand$joker_count
+  best
+}
 
 #' Find the category of a hand.
 #' Will work with hands up to 9 cards.
@@ -19,8 +46,8 @@ categorize_hand = function(hand) {
   # Limiting the hand to <= 9 cards means there can be only one
   # possible straight or flush. We depend on that.
   stopifnot(inherits(hand, 'hand'),
-            length(hand$cards) <= 9,
-            length(hand$cards) >= 5)
+            length(hand$cards) + hand$joker_count <= 9,
+            length(hand$cards) + hand$joker_count >= 5)
 
   # Category is cached in the hand, if it is there just return it
   if (!is.null(hand$category))
@@ -43,7 +70,8 @@ categorize_hand = function(hand) {
   }
 
   # Now try all the testers and find the one that sticks
-  testers = c(is_straight_flush, is_four_of_a_kind, is_full_house,
+  testers = c(is_five_of_a_kind, is_straight_flush, is_four_of_a_kind,
+              is_full_house,
               is_flush, is_straight, is_three_of_a_kind, is_two_pair,
               is_pair, is_high_card)
   for (tester in testers) {
@@ -72,6 +100,16 @@ make_diffs <- function(cards) {
 # These functions all take a hand, diffs, max_flush and flush_cards as input and
 # return either a category object (a list with a name, used cards, high card(s)
 # and kickers) or NULL
+is_five_of_a_kind = function(hand, diffs, max_flush, flush_cards) {
+  m = stringr::str_locate(diffs, '0000')
+  loc = unname(m[1, 1])
+  if (is.na(loc)) return (NULL)
+
+  high = hand[loc]
+  cards = hand[loc:(loc+4)]
+  return (as.category('Five of a Kind', cards, high, NULL))
+}
+
 is_straight_flush = function(hand, diffs, max_flush, flush_cards) {
   if (max_flush < 5)
     return (NULL)
@@ -134,8 +172,6 @@ is_straight = function(hand, diffs, ...) {
   cards = hand[start:(end+1)][keep]
 
   return (as.category('Straight', cards, cards[1], NULL))
-
-  return (NULL)
 }
 
 is_flush = function(hand, diffs, max_flush, flush_cards) {
@@ -144,7 +180,6 @@ is_flush = function(hand, diffs, max_flush, flush_cards) {
 
   return (NULL)
 }
-
 
 is_three_of_a_kind = function(hand, diffs, ...) {
   m = stringr::str_locate(diffs, '00')

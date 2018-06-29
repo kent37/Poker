@@ -28,7 +28,7 @@ server <- function(input, output) {
       output$error_msg = renderText(hand$error$message)
     } else {
       hand = hand$result
-      hand = purrr::safely(categorize_hand)(hand)
+      hand = purrr::safely(categorize_hand_with_jokers)(hand)
       if (is.null(hand$result)) {
         output$error_msg = renderText(hand$error$message)
       } else {
